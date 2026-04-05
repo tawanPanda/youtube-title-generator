@@ -1,0 +1,1199 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>YouTube Title Generator</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --red:        #ff2d2d;
+      --red-soft:   #ff4f4f;
+      --red-glow:   rgba(255, 45, 45, 0.18);
+      --bg:         #080b10;
+      --bg2:        #0d1117;
+      --surface:    #13181f;
+      --surface2:   #1a2030;
+      --card:       #1e2533;
+      --border:     rgba(255,255,255,0.07);
+      --border-hover: rgba(255,255,255,0.14);
+      --text:       #f0f4ff;
+      --text-secondary: #8b95a8;
+      --text-muted: #4e5a6e;
+      --accent-blue: #4f8cff;
+      --radius-sm:  8px;
+      --radius:     16px;
+      --radius-lg:  24px;
+    }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      font-family: 'Inter', system-ui, -apple-system, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 56px 16px 100px;
+      position: relative;
+      overflow-x: hidden;
+    }
+
+    /* ── Background glow orbs ── */
+    body::before, body::after {
+      content: '';
+      position: fixed;
+      border-radius: 50%;
+      pointer-events: none;
+      z-index: 0;
+    }
+    body::before {
+      width: 600px; height: 600px;
+      background: radial-gradient(circle, rgba(255,45,45,0.07) 0%, transparent 70%);
+      top: -120px; left: -100px;
+    }
+    body::after {
+      width: 500px; height: 500px;
+      background: radial-gradient(circle, rgba(79,140,255,0.06) 0%, transparent 70%);
+      bottom: -80px; right: -80px;
+    }
+
+    /* ── Layout wrapper ── */
+    .wrapper {
+      width: 100%;
+      max-width: 700px;
+      position: relative;
+      z-index: 1;
+    }
+
+    /* ── Header ── */
+    header {
+      text-align: center;
+      margin-bottom: 48px;
+    }
+
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: rgba(255,45,45,0.1);
+      border: 1px solid rgba(255,45,45,0.25);
+      border-radius: 50px;
+      color: var(--red-soft);
+      font-size: 0.72rem;
+      font-weight: 700;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      padding: 5px 14px;
+      margin-bottom: 20px;
+    }
+    .badge-dot {
+      width: 6px; height: 6px;
+      background: var(--red);
+      border-radius: 50%;
+      animation: pulse 2s ease-in-out infinite;
+    }
+    @keyframes pulse {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50%       { opacity: 0.5; transform: scale(0.7); }
+    }
+
+    header h1 {
+      font-size: clamp(2rem, 5vw, 3rem);
+      font-weight: 900;
+      letter-spacing: -0.04em;
+      line-height: 1.1;
+      margin-bottom: 14px;
+    }
+    header h1 .highlight {
+      background: linear-gradient(135deg, #ff2d2d 0%, #ff7a7a 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+    header p {
+      color: var(--text-secondary);
+      font-size: 1rem;
+      font-weight: 400;
+      line-height: 1.6;
+      max-width: 420px;
+      margin: 0 auto;
+    }
+
+    /* ── Main card ── */
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      padding: 36px;
+      box-shadow:
+        0 0 0 1px rgba(255,255,255,0.03),
+        0 20px 60px rgba(0,0,0,0.5),
+        0 1px 0 rgba(255,255,255,0.05) inset;
+    }
+
+    /* ── Section label ── */
+    .field-label {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 0.75rem;
+      font-weight: 700;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      margin-bottom: 10px;
+    }
+    .field-label .dot {
+      width: 4px; height: 4px;
+      background: var(--red);
+      border-radius: 50%;
+    }
+
+    /* ── Input group ── */
+    .input-group {
+      position: relative;
+      display: flex;
+      align-items: center;
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 6px 6px 6px 18px;
+      transition: border-color 0.2s, box-shadow 0.2s;
+      gap: 8px;
+    }
+    .input-group:focus-within {
+      border-color: rgba(255,45,45,0.4);
+      box-shadow: 0 0 0 3px var(--red-glow);
+    }
+    .input-group .input-icon {
+      color: var(--text-muted);
+      flex-shrink: 0;
+    }
+    .input-group input {
+      flex: 1;
+      background: transparent;
+      border: none;
+      color: var(--text);
+      font-family: inherit;
+      font-size: 0.97rem;
+      font-weight: 500;
+      outline: none;
+      padding: 10px 0;
+      min-width: 0;
+    }
+    .input-group input::placeholder { color: var(--text-muted); font-weight: 400; }
+
+    /* ── Generate button ── */
+    #generateBtn {
+      background: linear-gradient(135deg, #ff2d2d 0%, #e60000 100%);
+      border: none;
+      border-radius: var(--radius-sm);
+      color: #fff;
+      cursor: pointer;
+      font-family: inherit;
+      font-size: 0.88rem;
+      font-weight: 700;
+      padding: 12px 20px;
+      white-space: nowrap;
+      display: flex;
+      align-items: center;
+      gap: 7px;
+      transition: all 0.2s;
+      box-shadow: 0 4px 16px rgba(255,45,45,0.35), 0 1px 0 rgba(255,255,255,0.15) inset;
+      letter-spacing: 0.01em;
+      flex-shrink: 0;
+    }
+    #generateBtn:hover {
+      background: linear-gradient(135deg, #ff4f4f 0%, #ff2d2d 100%);
+      box-shadow: 0 6px 24px rgba(255,45,45,0.45), 0 1px 0 rgba(255,255,255,0.15) inset;
+      transform: translateY(-1px);
+    }
+    #generateBtn:active  { transform: translateY(0) scale(0.98); }
+    #generateBtn:disabled {
+      background: var(--surface2);
+      box-shadow: none;
+      color: var(--text-muted);
+      cursor: not-allowed;
+      transform: none;
+    }
+
+    /* ── Divider ── */
+    .divider {
+      height: 1px;
+      background: var(--border);
+      margin: 28px 0;
+    }
+
+    /* ── Style chips ── */
+    .chips {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 7px;
+    }
+    .chip {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 50px;
+      color: var(--text-secondary);
+      cursor: pointer;
+      font-family: inherit;
+      font-size: 0.78rem;
+      font-weight: 600;
+      padding: 7px 14px;
+      transition: all 0.15s;
+      user-select: none;
+      letter-spacing: 0.01em;
+    }
+    .chip:hover {
+      border-color: var(--border-hover);
+      color: var(--text);
+      background: var(--surface2);
+    }
+    .chip.active {
+      background: var(--red-glow);
+      border-color: rgba(255,45,45,0.4);
+      color: var(--red-soft);
+    }
+
+    /* ── Results ── */
+    #results {
+      display: none;
+      margin-top: 28px;
+    }
+
+    .results-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 16px;
+    }
+    .results-header h2 {
+      font-size: 0.85rem;
+      font-weight: 700;
+      color: var(--text-secondary);
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+    }
+    .count-badge {
+      background: var(--red-glow);
+      border: 1px solid rgba(255,45,45,0.3);
+      border-radius: 50px;
+      color: var(--red-soft);
+      font-size: 0.72rem;
+      font-weight: 800;
+      letter-spacing: 0.05em;
+      padding: 3px 10px;
+    }
+
+    /* ── Title list ── */
+    .title-list {
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .title-item {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 16px 18px;
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      cursor: pointer;
+      transition: all 0.18s;
+      animation: fadeUp 0.4s cubic-bezier(0.22,1,0.36,1) both;
+      position: relative;
+      overflow: hidden;
+    }
+    .title-item::before {
+      content: '';
+      position: absolute;
+      left: 0; top: 0; bottom: 0;
+      width: 3px;
+      background: linear-gradient(180deg, #ff2d2d, #ff7a7a);
+      opacity: 0;
+      transition: opacity 0.18s;
+    }
+    .title-item:hover {
+      border-color: var(--border-hover);
+      background: var(--surface2);
+      transform: translateX(2px);
+    }
+    .title-item:hover::before { opacity: 1; }
+
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(12px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+    .title-item:nth-child(1)  { animation-delay: 0.00s; }
+    .title-item:nth-child(2)  { animation-delay: 0.05s; }
+    .title-item:nth-child(3)  { animation-delay: 0.10s; }
+    .title-item:nth-child(4)  { animation-delay: 0.15s; }
+    .title-item:nth-child(5)  { animation-delay: 0.20s; }
+    .title-item:nth-child(6)  { animation-delay: 0.25s; }
+    .title-item:nth-child(7)  { animation-delay: 0.30s; }
+    .title-item:nth-child(8)  { animation-delay: 0.35s; }
+    .title-item:nth-child(9)  { animation-delay: 0.40s; }
+    .title-item:nth-child(10) { animation-delay: 0.45s; }
+
+    .title-num {
+      width: 28px; height: 28px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      color: var(--text-muted);
+      font-size: 0.72rem;
+      font-weight: 800;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      letter-spacing: 0;
+    }
+
+    .title-text {
+      flex: 1;
+      font-size: 0.935rem;
+      font-weight: 500;
+      line-height: 1.5;
+      color: var(--text);
+    }
+
+    .copy-btn {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      color: var(--text-muted);
+      cursor: pointer;
+      flex-shrink: 0;
+      padding: 7px;
+      transition: all 0.15s;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      opacity: 0;
+    }
+    .title-item:hover .copy-btn { opacity: 1; }
+    .copy-btn:hover {
+      background: var(--red-glow);
+      border-color: rgba(255,45,45,0.3);
+      color: var(--red-soft);
+    }
+
+    /* ── Copy all ── */
+    .copy-all-btn {
+      margin-top: 16px;
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      color: var(--text-secondary);
+      cursor: pointer;
+      font-family: inherit;
+      font-size: 0.83rem;
+      font-weight: 600;
+      padding: 13px 18px;
+      width: 100%;
+      transition: all 0.18s;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      letter-spacing: 0.01em;
+    }
+    .copy-all-btn:hover {
+      background: var(--red-glow);
+      border-color: rgba(255,45,45,0.3);
+      color: var(--red-soft);
+    }
+
+    /* ── Footer note ── */
+    .footer-note {
+      text-align: center;
+      color: var(--text-muted);
+      font-size: 0.75rem;
+      margin-top: 28px;
+      line-height: 1.6;
+    }
+    .footer-note kbd {
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      padding: 1px 6px;
+      font-family: inherit;
+      font-size: 0.72rem;
+    }
+
+    /* ── Toast ── */
+    #toast {
+      position: fixed;
+      bottom: 32px;
+      left: 50%;
+      transform: translateX(-50%) translateY(100px);
+      background: var(--text);
+      color: var(--bg);
+      border-radius: 50px;
+      padding: 11px 24px;
+      font-size: 0.85rem;
+      font-weight: 700;
+      box-shadow: 0 12px 40px rgba(0,0,0,0.6);
+      transition: transform 0.35s cubic-bezier(0.34,1.56,0.64,1);
+      pointer-events: none;
+      z-index: 1000;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    #toast .toast-icon {
+      width: 18px; height: 18px;
+      background: #22c55e;
+      border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      color: #fff;
+      font-size: 0.65rem;
+      font-weight: 900;
+      flex-shrink: 0;
+    }
+    #toast.show { transform: translateX(-50%) translateY(0); }
+
+    /* ── Spinner ── */
+    .spinner {
+      width: 16px; height: 16px;
+      border: 2px solid rgba(255,255,255,0.25);
+      border-top-color: #fff;
+      border-radius: 50%;
+      animation: spin 0.65s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* ── API key panel ── */
+    .api-panel {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      overflow: hidden;
+      margin-bottom: 24px;
+    }
+    .api-toggle {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 14px 18px;
+      cursor: pointer;
+      user-select: none;
+      transition: background 0.15s;
+    }
+    .api-toggle:hover { background: var(--surface2); }
+    .api-toggle-icon {
+      width: 30px; height: 30px;
+      background: linear-gradient(135deg, #1e3a5f 0%, #0f2440 100%);
+      border: 1px solid rgba(79,140,255,0.2);
+      border-radius: 8px;
+      display: flex; align-items: center; justify-content: center;
+      color: var(--accent-blue);
+      flex-shrink: 0;
+    }
+    .api-toggle-text { flex: 1; }
+    .api-toggle-text strong {
+      display: block;
+      font-size: 0.85rem;
+      font-weight: 700;
+      color: var(--text);
+      margin-bottom: 1px;
+    }
+    .api-toggle-text span {
+      font-size: 0.72rem;
+      color: var(--text-muted);
+      font-weight: 500;
+    }
+    .api-status-dot {
+      width: 7px; height: 7px;
+      border-radius: 50%;
+      background: var(--text-muted);
+      transition: background 0.3s;
+      flex-shrink: 0;
+    }
+    .api-status-dot.connected { background: #22c55e; box-shadow: 0 0 6px rgba(34,197,94,0.5); }
+    .api-chevron {
+      color: var(--text-muted);
+      transition: transform 0.25s;
+      flex-shrink: 0;
+    }
+    .api-panel.open .api-chevron { transform: rotate(180deg); }
+
+    .api-body {
+      display: none;
+      padding: 0 18px 18px;
+      border-top: 1px solid var(--border);
+    }
+    .api-panel.open .api-body { display: block; }
+
+    .api-body .hint {
+      font-size: 0.75rem;
+      color: var(--text-muted);
+      line-height: 1.6;
+      padding: 12px 0 14px;
+    }
+    .api-body .hint a { color: var(--accent-blue); text-decoration: none; }
+    .api-body .hint a:hover { text-decoration: underline; }
+
+    .api-key-row {
+      display: flex;
+      gap: 8px;
+    }
+    .api-key-wrap {
+      flex: 1;
+      position: relative;
+      display: flex;
+      align-items: center;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      transition: border-color 0.2s, box-shadow 0.2s;
+    }
+    .api-key-wrap:focus-within {
+      border-color: rgba(79,140,255,0.4);
+      box-shadow: 0 0 0 3px rgba(79,140,255,0.1);
+    }
+    .api-key-wrap input {
+      flex: 1;
+      background: transparent;
+      border: none;
+      color: var(--text);
+      font-family: 'SF Mono', 'Fira Code', monospace;
+      font-size: 0.8rem;
+      outline: none;
+      padding: 10px 36px 10px 12px;
+      width: 100%;
+    }
+    .api-key-wrap input::placeholder { color: var(--text-muted); font-family: inherit; }
+    .api-eye-btn {
+      position: absolute; right: 8px;
+      background: none; border: none;
+      color: var(--text-muted); cursor: pointer;
+      padding: 4px; display: flex;
+      transition: color 0.15s;
+    }
+    .api-eye-btn:hover { color: var(--text); }
+
+    .api-save-btn {
+      background: rgba(79,140,255,0.12);
+      border: 1px solid rgba(79,140,255,0.25);
+      border-radius: var(--radius-sm);
+      color: var(--accent-blue);
+      cursor: pointer;
+      font-family: inherit;
+      font-size: 0.8rem;
+      font-weight: 700;
+      padding: 10px 16px;
+      white-space: nowrap;
+      transition: all 0.15s;
+    }
+    .api-save-btn:hover {
+      background: rgba(79,140,255,0.2);
+      border-color: rgba(79,140,255,0.4);
+    }
+
+    .model-row {
+      display: flex;
+      gap: 6px;
+      margin-top: 10px;
+    }
+    .model-chip {
+      flex: 1;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      color: var(--text-secondary);
+      cursor: pointer;
+      font-family: inherit;
+      font-size: 0.73rem;
+      font-weight: 600;
+      padding: 7px 8px;
+      text-align: center;
+      transition: all 0.15s;
+      user-select: none;
+    }
+    .model-chip:hover { border-color: var(--border-hover); color: var(--text); }
+    .model-chip.active {
+      background: rgba(79,140,255,0.12);
+      border-color: rgba(79,140,255,0.35);
+      color: var(--accent-blue);
+    }
+
+    /* ── Source badge on results ── */
+    .source-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      border-radius: 50px;
+      font-size: 0.7rem;
+      font-weight: 700;
+      letter-spacing: 0.04em;
+      padding: 3px 10px;
+      text-transform: uppercase;
+    }
+    .source-badge.ai {
+      background: rgba(79,140,255,0.12);
+      border: 1px solid rgba(79,140,255,0.3);
+      color: var(--accent-blue);
+    }
+    .source-badge.template {
+      background: rgba(255,255,255,0.05);
+      border: 1px solid var(--border);
+      color: var(--text-muted);
+    }
+    .source-dot {
+      width: 5px; height: 5px;
+      border-radius: 50%;
+    }
+    .source-badge.ai .source-dot    { background: var(--accent-blue); }
+    .source-badge.template .source-dot { background: var(--text-muted); }
+
+    /* ── Error banner ── */
+    .error-banner {
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+      background: rgba(255,45,45,0.08);
+      border: 1px solid rgba(255,45,45,0.2);
+      border-radius: var(--radius-sm);
+      color: #ff7a7a;
+      font-size: 0.8rem;
+      line-height: 1.5;
+      margin-bottom: 14px;
+      padding: 12px 14px;
+    }
+    .error-banner svg { flex-shrink: 0; margin-top: 1px; }
+
+    /* ── Responsive ── */
+    @media (max-width: 520px) {
+      body { padding: 36px 12px 80px; }
+      .card { padding: 24px 18px; }
+      header h1 { font-size: 1.8rem; }
+      .input-group { flex-wrap: wrap; }
+      #generateBtn { width: 100%; justify-content: center; }
+      .model-row { flex-wrap: wrap; }
+    }
+  </style>
+</head>
+<body>
+<div class="wrapper">
+
+  <!-- ── Header ── -->
+  <header>
+    <div class="badge">
+      <span class="badge-dot"></span>
+      AI Title Generator
+    </div>
+    <h1>YouTube <span class="highlight">Title Generator</span></h1>
+    <p>Instantly generate 10 scroll-stopping titles for your next video. Just type a topic and hit generate.</p>
+  </header>
+
+  <!-- ── Main card ── -->
+  <div class="card">
+
+    <!-- ── OpenAI API Panel ── -->
+    <div class="api-panel" id="apiPanel">
+      <div class="api-toggle" id="apiToggle">
+        <div class="api-toggle-icon">
+          <!-- OpenAI-style spark icon -->
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M12 2L9.5 9.5 2 12l7.5 2.5L12 22l2.5-7.5L22 12l-7.5-2.5L12 2z"/>
+          </svg>
+        </div>
+        <div class="api-toggle-text">
+          <strong>OpenAI API</strong>
+          <span id="apiStatusText">Add your key for AI-powered titles</span>
+        </div>
+        <span class="api-status-dot" id="apiStatusDot"></span>
+        <svg class="api-chevron" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+          <path d="m6 9 6 6 6-6"/>
+        </svg>
+      </div>
+      <div class="api-body" id="apiBody">
+        <p class="hint">
+          Get your key at <a href="https://platform.openai.com/api-keys" target="_blank" rel="noopener">platform.openai.com</a>.
+          Your key is used directly from your browser and never sent to any server other than OpenAI.
+        </p>
+        <div class="api-key-row">
+          <div class="api-key-wrap">
+            <input type="password" id="apiKeyInput" placeholder="sk-proj-…" autocomplete="off" spellcheck="false" />
+            <button class="api-eye-btn" id="eyeBtn" title="Show / hide key">
+              <svg id="eyeIcon" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/>
+              </svg>
+            </button>
+          </div>
+          <button class="api-save-btn" id="apiSaveBtn">Save Key</button>
+        </div>
+        <div class="model-row" id="modelRow">
+          <div class="model-chip active" data-model="gpt-4o-mini">gpt-4o-mini</div>
+          <div class="model-chip" data-model="gpt-4o">gpt-4o</div>
+          <div class="model-chip" data-model="gpt-4-turbo">gpt-4-turbo</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Input -->
+    <div class="field-label">
+      <span class="dot"></span>
+      Video Topic
+    </div>
+    <div class="input-group">
+      <!-- Search icon -->
+      <svg class="input-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/>
+      </svg>
+      <input
+        type="text"
+        id="topicInput"
+        placeholder="e.g. morning productivity routine, budget travel…"
+        maxlength="120"
+        autocomplete="off"
+      />
+      <button id="generateBtn">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M5 12h14M12 5l7 7-7 7"/>
+        </svg>
+        Generate
+      </button>
+    </div>
+
+    <div class="divider"></div>
+
+    <!-- Style chips -->
+    <div class="field-label">
+      <span class="dot"></span>
+      Title Style
+    </div>
+    <div class="chips" id="styleChips">
+      <div class="chip active" data-style="all">✦ All Styles</div>
+      <div class="chip" data-style="howto">🛠 How-To</div>
+      <div class="chip" data-style="listicle">📋 Listicle</div>
+      <div class="chip" data-style="clickbait">🔥 Clickbait</div>
+      <div class="chip" data-style="story">📖 Story</div>
+      <div class="chip" data-style="question">❓ Question</div>
+      <div class="chip" data-style="challenge">💪 Challenge</div>
+    </div>
+
+    <!-- Results -->
+    <div id="results">
+      <div class="divider"></div>
+      <div class="results-header">
+        <h2>Generated Titles</h2>
+        <div style="display:flex;align-items:center;gap:8px;">
+          <span id="sourceBadge" class="source-badge template">
+            <span class="source-dot"></span>Template
+          </span>
+          <span class="count-badge" id="resultCount">10 titles</span>
+        </div>
+      </div>
+      <div id="errorBanner" class="error-banner" style="display:none;">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>
+        </svg>
+        <span id="errorMsg"></span>
+      </div>
+      <ul class="title-list" id="titleList"></ul>
+      <button class="copy-all-btn" id="copyAllBtn">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>
+        </svg>
+        Copy All 10 Titles
+      </button>
+    </div>
+
+  </div><!-- /card -->
+
+  <p class="footer-note">
+    Press <kbd>Enter</kbd> to generate &nbsp;·&nbsp; Click any title to copy it
+  </p>
+
+</div><!-- /wrapper -->
+
+<!-- Toast -->
+<div id="toast">
+  <span class="toast-icon">✓</span>
+  <span id="toastMsg">Copied!</span>
+</div>
+
+<script>
+  // ══════════════════════════════════════════════════════════════════
+  // TEMPLATE ENGINE (fallback when no API key)
+  // ══════════════════════════════════════════════════════════════════
+  const TEMPLATES = {
+    howto: [
+      "How to {topic} (Step-by-Step Guide)",
+      "How to {topic} in {timeframe} — Beginner's Guide",
+      "How I {topic} (And You Can Too)",
+      "The Right Way to {topic} That Nobody Tells You",
+      "How to {topic} Without {painpoint}",
+      "Master {topic}: The Complete How-To Guide",
+      "How to {topic} Like a Pro in {timeframe}",
+      "Stop {mistake} — Here's How to {topic} Correctly",
+    ],
+    listicle: [
+      "{n} Things You Need to Know About {topic}",
+      "{n} {topic} Tips That Actually Work",
+      "Top {n} {topic} Hacks Nobody Talks About",
+      "{n} {topic} Mistakes You're Probably Making",
+      "{n} Ways to {topic} Faster and Smarter",
+      "{n} {topic} Secrets the Experts Won't Share",
+      "{n} {topic} Ideas to Try Right Now",
+      "The {n} Best {topic} Strategies of {year}",
+    ],
+    clickbait: [
+      "I Tried {topic} for {timeframe} — Here's What Happened",
+      "This {topic} Changed My Life (Not Clickbait)",
+      "Why Everyone Is Doing {topic} Wrong",
+      "The Truth About {topic} Nobody Wants to Admit",
+      "I Spent {money} on {topic} — Was It Worth It?",
+      "This {topic} Hack Is Going Viral for a Reason",
+      "{topic}? I Was Shocked by the Results",
+      "Warning: You're Thinking About {topic} All Wrong",
+    ],
+    story: [
+      "My {topic} Journey: What I Wish I Knew Earlier",
+      "How {topic} Completely Changed My Life",
+      "I Failed at {topic} — Here's What I Learned",
+      "The Day {topic} Finally Clicked for Me",
+      "From Zero to {result}: My Honest {topic} Story",
+      "Why I Quit {topic} (And Why I Started Again)",
+      "What {timeframe} of {topic} Taught Me About Life",
+      "My Honest Review After {timeframe} of {topic}",
+    ],
+    question: [
+      "Is {topic} Really Worth It in {year}?",
+      "Can You Really {topic} With No Experience?",
+      "What Happens If You {topic} Every Day for {timeframe}?",
+      "Why Don't More People Know About This {topic} Trick?",
+      "Is {topic} Dead? Here's the Honest Answer",
+      "Are You Making These {topic} Mistakes?",
+      "Should You Start {topic}? Watch This First",
+      "Why Is Everyone Obsessed With {topic} Right Now?",
+    ],
+    challenge: [
+      "I Did {topic} Every Day for {timeframe} — Results",
+      "{timeframe} {topic} Challenge: Honest Results",
+      "Extreme {topic} Challenge (This Was Hard)",
+      "I Tried Every {topic} Trend So You Don't Have To",
+      "24-Hour {topic} Challenge — What I Discovered",
+      "{topic} Challenge: Can a Beginner Do It?",
+      "I Challenged Myself to {topic} — Here's What Happened",
+      "The Ultimate {topic} Challenge Explained",
+    ],
+  };
+
+  const FILLERS = {
+    timeframe: ["30 Days","7 Days","One Week","One Month","6 Months","a Year","24 Hours","3 Months"],
+    n:         ["5","7","10","12","15","3","9","6"],
+    year:      ["2025","2026"],
+    money:     ["$100","$500","$1,000","$50"],
+    painpoint: ["Spending a Fortune","Wasting Time","Getting Overwhelmed","Any Experience","the Stress"],
+    mistake:   ["Doing This","Making This Error","Wasting Time","Overthinking It"],
+    result:    ["Success","Expert Level","10k","Amazing Results","My Goal"],
+  };
+
+  const STYLE_LABELS = {
+    all:       "a diverse mix of styles",
+    howto:     "how-to tutorial style",
+    listicle:  "numbered listicle style",
+    clickbait: "high-curiosity clickbait style",
+    story:     "personal story or journey style",
+    question:  "compelling question-based style",
+    challenge: "challenge or experiment style",
+  };
+
+  const pick = arr => arr[Math.floor(Math.random() * arr.length)];
+  const capitalize = str => str.charAt(0).toUpperCase() + str.slice(1);
+
+  function fillTemplate(tpl, topic) {
+    let out = tpl.replace(/{topic}/g, capitalize(topic));
+    for (const [k, arr] of Object.entries(FILLERS))
+      out = out.replace(new RegExp(`{${k}}`, "g"), pick(arr));
+    return out;
+  }
+
+  function generateFromTemplates(topic, style) {
+    let pool = style === "all"
+      ? Object.values(TEMPLATES).flat()
+      : [...(TEMPLATES[style] || [])];
+    for (let i = pool.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [pool[i], pool[j]] = [pool[j], pool[i]];
+    }
+    return pool.slice(0, 10).map(t => fillTemplate(t, topic));
+  }
+
+  // ══════════════════════════════════════════════════════════════════
+  // OPENAI API
+  // ══════════════════════════════════════════════════════════════════
+  let savedApiKey = "";
+  let selectedModel = "gpt-4o-mini";
+
+  async function generateFromAI(topic, style) {
+    const styleDesc = STYLE_LABELS[style] || "a diverse mix of styles";
+    const systemPrompt = `You are an expert YouTube strategist who specializes in writing high-performing, click-worthy video titles. You understand the psychology of curiosity, social proof, and urgency that drives clicks.`;
+    const userPrompt = `Generate exactly 10 unique YouTube video titles for the topic: "${topic}".
+
+Style requirement: ${styleDesc}.
+
+Rules:
+- Each title must be compelling, specific, and optimized for YouTube CTR
+- Vary the structure — don't repeat the same format twice
+- Keep titles between 40–70 characters when possible
+- Use power words, numbers, or emotional hooks where natural
+- No quotation marks around titles
+- Return ONLY a numbered list (1. Title, 2. Title, etc.) with no extra commentary`;
+
+    const response = await fetch("https://api.openai.com/v1/chat/completions", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${savedApiKey}`,
+      },
+      body: JSON.stringify({
+        model: selectedModel,
+        messages: [
+          { role: "system", content: systemPrompt },
+          { role: "user",   content: userPrompt },
+        ],
+        temperature: 0.9,
+        max_tokens: 800,
+      }),
+    });
+
+    if (!response.ok) {
+      const err = await response.json().catch(() => ({}));
+      const msg = err?.error?.message || `API error ${response.status}`;
+      throw new Error(msg);
+    }
+
+    const data = await response.json();
+    const raw = data.choices?.[0]?.message?.content || "";
+
+    // Parse numbered list: "1. Title", "1) Title", etc.
+    const lines = raw.split("\n")
+      .map(l => l.replace(/^\s*\d+[\.\)]\s*/, "").trim())
+      .filter(l => l.length > 5);
+
+    if (lines.length < 5) throw new Error("Unexpected response format from API.");
+    return lines.slice(0, 10);
+  }
+
+  // ══════════════════════════════════════════════════════════════════
+  // DOM REFS
+  // ══════════════════════════════════════════════════════════════════
+  const topicInput   = document.getElementById("topicInput");
+  const generateBtn  = document.getElementById("generateBtn");
+  const resultsDiv   = document.getElementById("results");
+  const titleList    = document.getElementById("titleList");
+  const resultCount  = document.getElementById("resultCount");
+  const copyAllBtn   = document.getElementById("copyAllBtn");
+  const toast        = document.getElementById("toast");
+  const toastMsg     = document.getElementById("toastMsg");
+  const styleChips   = document.getElementById("styleChips");
+  const sourceBadge  = document.getElementById("sourceBadge");
+  const errorBanner  = document.getElementById("errorBanner");
+  const errorMsg     = document.getElementById("errorMsg");
+
+  // API panel
+  const apiPanel      = document.getElementById("apiPanel");
+  const apiToggle     = document.getElementById("apiToggle");
+  const apiKeyInput   = document.getElementById("apiKeyInput");
+  const apiSaveBtn    = document.getElementById("apiSaveBtn");
+  const apiStatusDot  = document.getElementById("apiStatusDot");
+  const apiStatusText = document.getElementById("apiStatusText");
+  const eyeBtn        = document.getElementById("eyeBtn");
+  const eyeIcon       = document.getElementById("eyeIcon");
+  const modelRow      = document.getElementById("modelRow");
+
+  let selectedStyle = "all";
+  let currentTitles = [];
+
+  // ══════════════════════════════════════════════════════════════════
+  // API PANEL INTERACTIONS
+  // ══════════════════════════════════════════════════════════════════
+  apiToggle.addEventListener("click", () => apiPanel.classList.toggle("open"));
+
+  eyeBtn.addEventListener("click", () => {
+    const isPassword = apiKeyInput.type === "password";
+    apiKeyInput.type = isPassword ? "text" : "password";
+    eyeIcon.innerHTML = isPassword
+      ? `<path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94"/>
+         <path d="M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19"/>
+         <line x1="1" y1="1" x2="23" y2="23"/>`
+      : `<path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/>`;
+  });
+
+  apiSaveBtn.addEventListener("click", () => {
+    const key = apiKeyInput.value.trim();
+    if (!key) { apiKeyInput.focus(); return; }
+    savedApiKey = key;
+    apiStatusDot.classList.add("connected");
+    apiStatusText.textContent = `Connected · ${selectedModel}`;
+    apiPanel.classList.remove("open");
+    showToast("API key saved — AI mode active!");
+  });
+
+  // Allow Enter in key field to save
+  apiKeyInput.addEventListener("keydown", e => { if (e.key === "Enter") apiSaveBtn.click(); });
+
+  // Model selection
+  modelRow.addEventListener("click", e => {
+    const chip = e.target.closest(".model-chip");
+    if (!chip) return;
+    modelRow.querySelectorAll(".model-chip").forEach(c => c.classList.remove("active"));
+    chip.classList.add("active");
+    selectedModel = chip.dataset.model;
+    if (savedApiKey) apiStatusText.textContent = `Connected · ${selectedModel}`;
+  });
+
+  // ══════════════════════════════════════════════════════════════════
+  // STYLE CHIPS
+  // ══════════════════════════════════════════════════════════════════
+  styleChips.addEventListener("click", e => {
+    const chip = e.target.closest(".chip");
+    if (!chip) return;
+    styleChips.querySelectorAll(".chip").forEach(c => c.classList.remove("active"));
+    chip.classList.add("active");
+    selectedStyle = chip.dataset.style;
+  });
+
+  // ══════════════════════════════════════════════════════════════════
+  // GENERATE
+  // ══════════════════════════════════════════════════════════════════
+  async function generate() {
+    const topic = topicInput.value.trim();
+    if (!topic) {
+      topicInput.closest(".input-group").style.boxShadow = "0 0 0 3px rgba(255,45,45,0.35)";
+      topicInput.focus();
+      setTimeout(() => topicInput.closest(".input-group").style.boxShadow = "", 900);
+      return;
+    }
+
+    generateBtn.disabled = true;
+    generateBtn.innerHTML = `<div class="spinner"></div> ${savedApiKey ? "Asking AI…" : "Generating…"}`;
+    errorBanner.style.display = "none";
+
+    const useAI = !!savedApiKey;
+    let titles = [];
+
+    try {
+      if (useAI) {
+        titles = await generateFromAI(topic, selectedStyle);
+        setSourceBadge("ai");
+      } else {
+        await new Promise(r => setTimeout(r, 550)); // subtle UX delay
+        titles = generateFromTemplates(topic, selectedStyle);
+        setSourceBadge("template");
+      }
+      currentTitles = titles;
+      renderTitles(titles);
+      resultsDiv.style.display = "block";
+      setTimeout(() => resultsDiv.scrollIntoView({ behavior: "smooth", block: "nearest" }), 50);
+    } catch (err) {
+      // AI failed → graceful fallback to templates
+      currentTitles = generateFromTemplates(topic, selectedStyle);
+      renderTitles(currentTitles);
+      setSourceBadge("template");
+      showError(`AI error: ${err.message}. Showing template results instead.`);
+      resultsDiv.style.display = "block";
+      setTimeout(() => resultsDiv.scrollIntoView({ behavior: "smooth", block: "nearest" }), 50);
+    }
+
+    generateBtn.disabled = false;
+    generateBtn.innerHTML = `
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M5 12h14M12 5l7 7-7 7"/>
+      </svg>
+      Generate`;
+  }
+
+  function setSourceBadge(mode) {
+    sourceBadge.className = `source-badge ${mode}`;
+    sourceBadge.innerHTML = mode === "ai"
+      ? `<span class="source-dot"></span>AI · ${selectedModel}`
+      : `<span class="source-dot"></span>Template`;
+  }
+
+  function showError(msg) {
+    errorMsg.textContent = msg;
+    errorBanner.style.display = "flex";
+  }
+
+  // ══════════════════════════════════════════════════════════════════
+  // RENDER
+  // ══════════════════════════════════════════════════════════════════
+  function renderTitles(titles) {
+    titleList.innerHTML = "";
+    resultCount.textContent = `${titles.length} titles`;
+    titles.forEach((title, i) => {
+      const li = document.createElement("li");
+      li.className = "title-item";
+      // Escape HTML in title to prevent XSS
+      const safe = title.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");
+      li.innerHTML = `
+        <span class="title-num">${String(i + 1).padStart(2, "0")}</span>
+        <span class="title-text">${safe}</span>
+        <button class="copy-btn" title="Copy" aria-label="Copy title">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="9" y="9" width="13" height="13" rx="2"/>
+            <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>
+          </svg>
+        </button>`;
+      li.querySelector(".copy-btn").addEventListener("click", e => { e.stopPropagation(); copyText(title); });
+      li.addEventListener("click", () => copyText(title));
+      titleList.appendChild(li);
+    });
+  }
+
+  // ══════════════════════════════════════════════════════════════════
+  // COPY
+  // ══════════════════════════════════════════════════════════════════
+  function copyText(text) {
+    const done = () => showToast("Copied to clipboard!");
+    navigator.clipboard
+      ? navigator.clipboard.writeText(text).then(done).catch(fallback)
+      : fallback();
+    function fallback() {
+      const el = Object.assign(document.createElement("textarea"), { value: text });
+      document.body.appendChild(el); el.select();
+      document.execCommand("copy"); document.body.removeChild(el); done();
+    }
+  }
+
+  copyAllBtn.addEventListener("click", () => {
+    if (!currentTitles.length) return;
+    copyText(currentTitles.map((t, i) => `${i + 1}. ${t}`).join("\n"));
+    showToast(`All ${currentTitles.length} titles copied!`);
+  });
+
+  // ══════════════════════════════════════════════════════════════════
+  // TOAST
+  // ══════════════════════════════════════════════════════════════════
+  let toastTimer;
+  function showToast(msg) {
+    toastMsg.textContent = msg;
+    toast.classList.add("show");
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(() => toast.classList.remove("show"), 2400);
+  }
+
+  // ══════════════════════════════════════════════════════════════════
+  // EVENTS
+  // ══════════════════════════════════════════════════════════════════
+  generateBtn.addEventListener("click", generate);
+  topicInput.addEventListener("keydown", e => { if (e.key === "Enter") generate(); });
+</script>
+</body>
+</html>
